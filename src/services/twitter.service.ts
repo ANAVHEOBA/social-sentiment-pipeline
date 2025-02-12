@@ -9,6 +9,7 @@ export class TwitterService {
   private readonly maxRetries = 3;
   private lastRequestTime: number = 0;
   private readonly minRequestInterval = 5000; // 5 seconds between requests
+  private readonly maxWaitTime = 900000; // 15 minutes max wait
 
   constructor() {
     this.client = new TwitterApi(twitterConfig.bearerToken);
@@ -25,17 +26,13 @@ export class TwitterService {
   }
 
   private async waitForRateLimit(error: any): Promise<void> {
-    if (error.rateLimit) {
-      const resetTime = error.rateLimit.reset * 1000; // Convert to milliseconds
-      const now = Date.now();
-      const waitTime = Math.max(resetTime - now, this.minRequestInterval);
-      
-      logger.warn(`Rate limited. Waiting ${Math.ceil(waitTime/1000)} seconds for rate limit reset`);
-      await this.sleep(waitTime);
-    } else {
-      // If no rate limit info, use default wait time
-      await this.sleep(this.minRequestInterval);
-    }
+    const waitTime = Math.min(
+      error.rateLimit?.reset ? (error.rateLimit.reset * 1000) - Date.now() : this.minRequestInterval,
+      this.maxWaitTime
+    );
+    
+    logger.warn(`Rate limited. Waiting ${Math.ceil(waitTime/1000)} seconds`);
+    await this.sleep(waitTime);
   }
 
   private async throttleRequest(): Promise<void> {

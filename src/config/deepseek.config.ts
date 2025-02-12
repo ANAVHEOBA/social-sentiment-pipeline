@@ -3,6 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const deepseekConfig = {
-  apiKey: process.env.DEEPSEEK_API_KEY || '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',
-  model: 'deepseek-r1:free'
+  baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
+  apiKey: process.env.OPENROUTER_API_KEY || 'your-default-key',
+  model: 'deepseek/deepseek-coder-33b-instruct',
+  headers: {
+    'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5000',
+    'X-Title': process.env.SITE_NAME || 'Social Sentiment Pipeline',
+    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY || 'your-default-key'}`,
+    'Content-Type': 'application/json'
+  }
 };
